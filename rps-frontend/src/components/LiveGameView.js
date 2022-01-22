@@ -8,7 +8,7 @@ const LiveGameView = () => {
 
 	const handleWsUpdate = (event) => {
 		try {
-			const data = JSON.parse(JSON.parse(event.data));
+			const data = JSON.parse(event.data);
 			if (data.type === "GAME_BEGIN") dispatch(addGameBegin(data));
 			//removes the game from live games and adds the result
 			if (data.type === "GAME_RESULT") dispatch(addGameResult(data));

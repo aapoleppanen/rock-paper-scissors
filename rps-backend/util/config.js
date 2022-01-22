@@ -11,6 +11,9 @@ const API_URI = process.env.API_URI;
 const CACHE_LENGTH = 10;
 const PAGE_LENGTH = 25;
 
+const LIVE_GAME_TIMEOUT = 70 * 1000;
+const LIVE_GAME_CHECK_INTERVAL = 30 * 1000;
+
 module.exports = {
 	PORT,
 	MONGO_URI,
@@ -21,4 +24,6 @@ module.exports = {
 	API_URI,
 	CACHE_LENGTH,
 	PAGE_LENGTH,
+	LIVE_GAME_CHECK_INTERVAL,
+	LIVE_GAME_TIMEOUT,
 };

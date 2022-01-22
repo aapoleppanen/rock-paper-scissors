@@ -5,7 +5,8 @@ import React, { createContext, useContext, useEffect } from "react";
 export const WsContext = createContext({ ws: null });
 
 export const WsProvider = ({ children }) => {
-	const ws = new WebSocket("wss://bad-api-assignment.reaktor.com/rps/live");
+	// const ws = new WebSocket("wss://bad-api-assignment.reaktor.com/rps/live");
+	const ws = new WebSocket("ws://localhost:8080/live");
 
 	useEffect(() => {
 		ws.addEventListener("open", () => {

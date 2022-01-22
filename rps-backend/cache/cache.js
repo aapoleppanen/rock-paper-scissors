@@ -1,6 +1,8 @@
 const redis = require("redis");
 const config = require("../util/config");
 const { formatGame } = require("../util/dbUtil");
+const fetch = require("node-fetch");
+const { sendGame } = require("../ws/wsServer");
 
 const client = redis.createClient({
 	url: config.REDIS_URI,
@@ -8,6 +10,9 @@ const client = redis.createClient({
 
 client.on("connect", () => {
 	console.log("Connected to Redis");
+	setInterval(() => {
+		checkLiveGames();
+	}, config.LIVE_GAME_CHECK_INTERVAL);
 });
 
 client.on("error", (e) => {
@@ -41,7 +46,10 @@ const trimCache = async () => {
 
 const storeGameResult = async (game) => {
 	try {
-		await client.json.arrAppend("data", ".games", formatGame(game));
+		const completedGames = await getCompletedGames();
+		if (!completedGames.find((g) => g.gameId === game.gameId)) {
+			await client.json.arrAppend("data", ".games", formatGame(game));
+		}
 		const liveGames = await getLiveGames();
 		await client.json.set(
 			"data",
@@ -56,6 +64,7 @@ const storeGameResult = async (game) => {
 const storeGameBegin = async (game) => {
 	try {
 		await client.json.arrAppend("data", ".liveGames", formatGame(game));
+		// await checkLiveGame(game);
 	} catch (e) {
 		console.log(e);
 	}
@@ -83,6 +92,78 @@ const getLiveGames = async () => {
 	}
 };
 
+const checkLiveGame = async (game) => {
+	const checkOnDelay = async (game) => {
+		try {
+			await delay(config.LIVE_GAME_TIMEOUT);
+
+			const cursor = "/rps/history";
+			const res = await fetch(`${config.API_URI}${cursor}`);
+			const games = await res.json();
+			const gameResult = games.data.find((g) => g.gameId === game.gameId);
+			const liveGames = await getLiveGames();
+			const completedGames = await getCompletedGames();
+			const hasBeenAdded = await completedGames.find(
+				(g) => g.gameId === game.gameId
+			);
+			if (gameResult && !hasBeenAdded) {
+				await client.json.set(
+					"data",
+					".liveGames",
+					liveGames.filter((g) => g.gameId !== game.gameId)
+				);
+				//save the game and send it to the clients
+				await storeGameResult(gameResult);
+				await sendGame(gameResult);
+			}
+		} catch (e) {
+			console.log(e);
+		}
+	};
+	checkOnDelay(game);
+};
+
+const checkLiveGames = async () => {
+	try {
+		let games = [];
+		const cursor = "/rps/history";
+		const res1 = await fetch(`${config.API_URI}${cursor}`);
+		const games1 = await res1.json();
+		const res2 = await fetch(`${config.API_URI}${games1.cursor}`);
+		const games2 = await res2.json();
+		games = games.concat(games1.data);
+		games = games.concat(games2.data);
+		const liveGames = await getLiveGames();
+		const completedGames = await getCompletedGames();
+		for (const game of liveGames) {
+			const gameResult = games.find((g) => g.gameId === game.gameId);
+			const hasBeenAdded = await completedGames.find(
+				(g) => g.gameId === game.gameId
+			);
+			if (gameResult && !hasBeenAdded) {
+				await client.json.set(
+					"data",
+					".liveGames",
+					liveGames.filter((g) => g.gameId !== game.gameId)
+				);
+				//save the game and send it to the clients
+				await storeGameResult(gameResult);
+				await sendGame(gameResult);
+			}
+		}
+	} catch (e) {
+		console.log(e);
+	}
+};
+
+const delay = (t, val) => {
+	return new Promise(function (resolve) {
+		setTimeout(function () {
+			resolve(val);
+		}, t);
+	});
+};
+
 module.exports = {
 	client,
 	clearCache,
@@ -91,4 +172,5 @@ module.exports = {
 	getCompletedGames,
 	getLiveGames,
 	trimCache,
+	checkLiveGames,
 };

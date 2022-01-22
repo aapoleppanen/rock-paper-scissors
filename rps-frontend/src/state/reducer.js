@@ -39,24 +39,37 @@ export const reducer = (state, action) => {
 				],
 			};
 		case "ADD_GAME_RESULT":
-			return {
-				...state,
-				completedGames: [
+			const isAdded = state.completedGames.find(
+				(g) => g.gameId === action.payload.gameId
+			);
+			if (isAdded) {
+				return {
+					...state,
+					liveGames: state.liveGames.filter(
+						(g) => g.gameId !== action.payload.gameId
+					),
+				};
+			} else {
+				const completedGames = [
 					{
 						...formatGame(action.payload),
 					},
 					...state.completedGames,
-				],
-				liveGames: state.liveGames.filter(
-					(g) => g.gameId !== action.payload.gameId
-				),
-			};
+				];
+				return {
+					...state,
+					completedGames: completedGames.slice(0, 10),
+					liveGames: state.liveGames.filter(
+						(g) => g.gameId !== action.payload.gameId
+					),
+				};
+			}
 		case "INIT_GAMES":
 			return {
 				...state,
 				completedGames: [
 					...state.completedGames,
-					...action.payload.completedGames,
+					...action.payload.completedGames.reverse(),
 				],
 				liveGames: [...state.liveGames, ...action.payload.liveGames],
 			};
@@ -90,7 +103,7 @@ const formatGame = (g) => {
 };
 
 const determineWinner = (game) => {
-	const [aPlayed, bPlayed] = [game.playerA.played, game.playerB.played];
+	const [aPlayed, bPlayed] = [game.aPlayed, game.bPlayed];
 	if (aPlayed === bPlayed) {
 		return "tie";
 	} else if (aPlayed === "ROCK") {

@@ -16,7 +16,7 @@ const PlayerHistory = ({ id }) => {
 			if (data) {
 				const newPlayer = isNew
 					? { ...data, games: [data.games] }
-					: { ...data, games: [data.games, ...player.games] };
+					: { ...data, games: [...new Set([data.games, ...player.games])] };
 				setPlayer(newPlayer);
 			}
 		},
