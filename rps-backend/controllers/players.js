@@ -1,8 +1,8 @@
 const Game = require("../models/game");
 const Player = require("../models/player");
 const cache = require("../cache/cache");
-const { formatPlayer } = require("../util/dbUtil");
-const config = require("../util/config");
+const { formatPlayer } = require("../util/formatter");
+const config = require("../config/config");
 
 const playersRouter = require("express").Router();
 
@@ -16,32 +16,37 @@ playersRouter.get("/", async (req, res, next) => {
 	}
 });
 
-//get player stats
-playersRouter.get("/:id", async (req, res, next) => {
+const getGamesInDb = async (name, page) => {
 	try {
-		const player = await Player.findById(req.params.id);
-		const cachedGames = await cache.getCompletedGames();
-		const playerGames = await cachedGames.filter(
-			(g) => g.playerA == player.name || g.playerB == player.name
-		);
-		games = await Game.find(
+		const games = await Game.find(
 			{
-				$or: [{ playerA: player.name }, { playerB: player.name }],
+				$or: [{ playerA: name }, { playerB: name }],
 			},
 			{},
 			{
 				sort: { t: -1 },
+				skip: page * config.PAGE_LENGTH,
 				limit: config.PAGE_LENGTH,
 			}
 		);
+		return games;
+	} catch (e) {
+		console.log(e);
+	}
+};
 
-		const playerObject = formatPlayer(
-			player.toObject(),
-			playerGames.sort((a, b) => b.t - a.t)
-		);
+//get player stats
+playersRouter.get("/:id", async (req, res, next) => {
+	try {
+		const player = await Player.findById(req.params.id);
+		const cachedGames = await cache.getPlayerGames(player.name);
+		const dbGames = await getGamesInDb(player.name, 0);
+		//get updated player with cached game stats added
+		const playerObject = formatPlayer(player.toObject(), cachedGames);
 		res.json({
 			...playerObject,
-			games: [...playerGames, ...games].filter(
+			//filter out possible duplicates
+			games: [...cachedGames, ...dbGames].filter(
 				(v, i, a) => a.findIndex((t) => t.gameId === v.gameId) === i
 			),
 		});
@@ -53,17 +58,7 @@ playersRouter.get("/:id", async (req, res, next) => {
 //get more games for a given player
 playersRouter.get("/games/:name/:page", async (req, res, next) => {
 	try {
-		games = await Game.find(
-			{
-				$or: [{ playerA: req.params.name }, { playerB: req.params.name }],
-			},
-			{},
-			{
-				sort: { t: -1 },
-				skip: req.params.page * config.PAGE_LENGTH,
-				limit: config.PAGE_LENGTH,
-			}
-		);
+		const games = await getGamesInDb(req.params.name, req.params.page);
 		res.json({ games });
 	} catch (e) {
 		next(e);

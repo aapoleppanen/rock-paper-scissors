@@ -34,7 +34,7 @@ export const reducer = (state, action) => {
 				liveGames: [
 					...state.liveGames,
 					{
-						...formatGame(action.payload),
+						...action.payload,
 					},
 				],
 			};
@@ -52,7 +52,7 @@ export const reducer = (state, action) => {
 			} else {
 				const completedGames = [
 					{
-						...formatGame(action.payload),
+						...action.payload,
 					},
 					...state.completedGames,
 				];
@@ -75,54 +75,5 @@ export const reducer = (state, action) => {
 			};
 		default:
 			return state;
-	}
-};
-
-//add this to the reducers
-const formatGame = (g) => {
-	const fg = {
-		gameId: g.gameId,
-		playerA: g.playerA.name,
-		playerB: g.playerB.name,
-		t: g.t,
-	};
-	if (g.type && g.type === "GAME_BEGIN") {
-		return fg;
-	} else {
-		return {
-			...fg,
-			aPlayed: g.playerA.played,
-			bPlayed: g.playerB.played,
-			winner: determineWinner({
-				...fg,
-				aPlayed: g.playerA.played,
-				bPlayed: g.playerB.played,
-			}),
-		};
-	}
-};
-
-const determineWinner = (game) => {
-	const [aPlayed, bPlayed] = [game.aPlayed, game.bPlayed];
-	if (aPlayed === bPlayed) {
-		return "tie";
-	} else if (aPlayed === "ROCK") {
-		if (bPlayed === "PAPER") {
-			return "playerB";
-		} else {
-			return "playerA";
-		}
-	} else if (aPlayed === "PAPER") {
-		if (bPlayed === "SCISSORS") {
-			return "playerB";
-		} else {
-			return "playerA";
-		}
-	} else {
-		if (bPlayed === "ROCK") {
-			return "playerB";
-		} else {
-			return "playerA";
-		}
 	}
 };

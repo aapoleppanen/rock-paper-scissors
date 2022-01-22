@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
-import playerService from "../services/players";
+import playerService from "../../services/players";
 import { Text, Container, Button } from "theme-ui";
-import GameList from "./GameList";
-import { useStateValue } from "../state";
+import GameList from "../Game/GameList";
+import { useStateValue } from "../../state";
 
 const PlayerHistory = ({ id }) => {
 	const [player, setPlayer] = useState();
@@ -24,13 +24,7 @@ const PlayerHistory = ({ id }) => {
 	);
 
 	useEffect(() => {
-		try {
-			if (id.length) {
-				getPlayer(true);
-			}
-		} catch (e) {
-			console.log(e);
-		}
+		if (id.length) getPlayer(true);
 	}, [id]);
 
 	useEffect(() => {
@@ -51,6 +45,7 @@ const PlayerHistory = ({ id }) => {
 		}
 	}, [completedGames, getPlayer, lastUpdate, player]);
 
+	//get more recent games
 	const getMore = async () => {
 		try {
 			setPage(page + 1);

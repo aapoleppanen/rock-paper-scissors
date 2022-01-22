@@ -5,9 +5,6 @@ import { reducer, StateProvider } from "./state";
 import { WsProvider } from "./services/liveGames";
 import ThemeProvider from "./theme";
 
-//state provider causes re-render
-//which causes double event listener
-
 ReactDOM.render(
 	<React.StrictMode>
 		<WsProvider>

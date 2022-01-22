@@ -1,18 +1,16 @@
 const express = require("express");
-const config = require("./util/config");
+const config = require("./config/config");
 const app = express();
 const mongoose = require("mongoose");
-const db = require("./util/db");
+const db = require("./services/db");
 const cache = require("./cache/cache");
-const ws = require("./ws/ws");
+const ws = require("./services/websockets/client");
 const cors = require("cors");
 const middleware = require("./util/middleware");
 
 //router imports
 const playersRouter = require("./controllers/players");
 const gamesRouter = require("./controllers/games");
-
-const { clearCollections, initDatabase } = require("./util/db");
 
 mongoose
 	.connect(config.MONGO_URI)

@@ -11,10 +11,10 @@ server.on("error", (e) => {
 	console.log(e);
 });
 
-const sendGame = async (event) => {
+const sendGame = async (event, type) => {
 	server.clients.forEach((c) => {
 		if (c.readyState === WebSocket.OPEN) {
-			c.send(JSON.stringify(event));
+			c.send(JSON.stringify({ ...event, type }));
 		}
 	});
 };

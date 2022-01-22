@@ -1,23 +1,9 @@
 import React from "react";
-import { useStateValue, addGameBegin, addGameResult } from "../state";
-import { useWebSocket } from "../services/liveGames";
-import GameList from "./GameList";
+import { useStateValue } from "../state";
+import GameList from "./Game/GameList";
 
 const LiveGameView = () => {
-	const [{ liveGames }, dispatch] = useStateValue();
-
-	const handleWsUpdate = (event) => {
-		try {
-			const data = JSON.parse(event.data);
-			if (data.type === "GAME_BEGIN") dispatch(addGameBegin(data));
-			//removes the game from live games and adds the result
-			if (data.type === "GAME_RESULT") dispatch(addGameResult(data));
-		} catch (e) {
-			console.log(e);
-		}
-	};
-
-	useWebSocket("message", handleWsUpdate);
+	const [{ liveGames }] = useStateValue();
 
 	return (
 		<div>

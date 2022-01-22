@@ -7,11 +7,13 @@ const REDIS_URI = process.env.REDIS_URI;
 const CURSOR_ID = process.env.CURSOR_ID;
 const WS_URI = process.env.WS_URI;
 const API_URI = process.env.API_URI;
+const DEFAULT_CURSOR = process.env.DEFAULT_CURSOR;
 
 const CACHE_LENGTH = 10;
 const PAGE_LENGTH = 25;
 
-const LIVE_GAME_TIMEOUT = 70 * 1000;
+const PAGE_LIMIT = 500;
+
 const LIVE_GAME_CHECK_INTERVAL = 30 * 1000;
 
 module.exports = {
@@ -25,5 +27,6 @@ module.exports = {
 	CACHE_LENGTH,
 	PAGE_LENGTH,
 	LIVE_GAME_CHECK_INTERVAL,
-	LIVE_GAME_TIMEOUT,
+	DEFAULT_CURSOR,
+	PAGE_LIMIT,
 };

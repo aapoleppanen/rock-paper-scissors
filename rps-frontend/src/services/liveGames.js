@@ -1,12 +1,10 @@
-import React, { createContext, useContext, useEffect } from "react";
-
-//replace with config
+import React, { createContext, useContext, useEffect, useMemo } from "react";
+import { WS_LINK } from "../config/config";
 
 export const WsContext = createContext({ ws: null });
 
 export const WsProvider = ({ children }) => {
-	// const ws = new WebSocket("wss://bad-api-assignment.reaktor.com/rps/live");
-	const ws = new WebSocket("ws://localhost:8080/live");
+	const ws = useMemo(() => new WebSocket(WS_LINK), []);
 
 	useEffect(() => {
 		ws.addEventListener("open", () => {
@@ -20,7 +18,7 @@ export const WsProvider = ({ children }) => {
 		return () => {
 			ws.close();
 		};
-	}, []);
+	}, [ws]);
 
 	return <WsContext.Provider value={{ ws: ws }}>{children}</WsContext.Provider>;
 };

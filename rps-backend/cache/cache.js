@@ -1,8 +1,8 @@
 const redis = require("redis");
-const config = require("../util/config");
-const { formatGame } = require("../util/dbUtil");
-const fetch = require("node-fetch");
-const { sendGame } = require("../ws/wsServer");
+const config = require("../config/config");
+const { formatGame } = require("../util/formatter");
+const { sendGame } = require("../services/websockets/server");
+const history = require("../services/history");
 
 const client = redis.createClient({
 	url: config.REDIS_URI,
@@ -10,8 +10,11 @@ const client = redis.createClient({
 
 client.on("connect", () => {
 	console.log("Connected to Redis");
+	//intervally check if livegames have been added to history
+	//since the api does not send a "GAME_RESULT" update
+	//for all games
 	setInterval(() => {
-		checkLiveGames();
+		updateLiveGames();
 	}, config.LIVE_GAME_CHECK_INTERVAL);
 });
 
@@ -19,6 +22,7 @@ client.on("error", (e) => {
 	console.log(e);
 });
 
+//clear the cache
 const clearCache = async (game) => {
 	try {
 		await client.json.set("data", "$", {
@@ -30,6 +34,8 @@ const clearCache = async (game) => {
 	}
 };
 
+//trim to cache
+//this function is called when the database is updated
 const trimCache = async () => {
 	try {
 		const curLen = await client.json.arrLen("data", "games");
@@ -46,16 +52,11 @@ const trimCache = async () => {
 
 const storeGameResult = async (game) => {
 	try {
-		const completedGames = await getCompletedGames();
-		if (!completedGames.find((g) => g.gameId === game.gameId)) {
+		const duplicate = await checkForCompletedDuplicates(game);
+		if (!duplicate) {
 			await client.json.arrAppend("data", ".games", formatGame(game));
 		}
-		const liveGames = await getLiveGames();
-		await client.json.set(
-			"data",
-			".liveGames",
-			liveGames.filter((g) => g.gameId !== game.gameId)
-		);
+		await removeFromLiveGames(game);
 	} catch (e) {
 		console.log(e);
 	}
@@ -63,11 +64,40 @@ const storeGameResult = async (game) => {
 
 const storeGameBegin = async (game) => {
 	try {
-		await client.json.arrAppend("data", ".liveGames", formatGame(game));
-		// await checkLiveGame(game);
+		const duplicate = await checkForLiveDuplicates(game);
+		if (!duplicate) {
+			await client.json.arrAppend("data", ".liveGames", formatGame(game));
+		}
 	} catch (e) {
 		console.log(e);
 	}
+};
+
+const checkForCompletedDuplicates = async (game) => {
+	try {
+		const games = await getCompletedGames();
+		return games.find((g) => g.gameId === game.gameId);
+	} catch (e) {
+		console.log(e);
+	}
+};
+
+const checkForLiveDuplicates = async (game) => {
+	try {
+		const games = await getLiveGames();
+		return games.find((g) => g.gameId === game.gameId);
+	} catch (e) {
+		console.log(e);
+	}
+};
+
+const removeFromLiveGames = async (game) => {
+	const liveGames = await getLiveGames();
+	await client.json.set(
+		"data",
+		".liveGames",
+		liveGames.filter((g) => g.gameId !== game.gameId)
+	);
 };
 
 const getCompletedGames = async () => {
@@ -92,63 +122,26 @@ const getLiveGames = async () => {
 	}
 };
 
-const checkLiveGame = async (game) => {
-	const checkOnDelay = async (game) => {
-		try {
-			await delay(config.LIVE_GAME_TIMEOUT);
-
-			const cursor = "/rps/history";
-			const res = await fetch(`${config.API_URI}${cursor}`);
-			const games = await res.json();
-			const gameResult = games.data.find((g) => g.gameId === game.gameId);
-			const liveGames = await getLiveGames();
-			const completedGames = await getCompletedGames();
-			const hasBeenAdded = await completedGames.find(
-				(g) => g.gameId === game.gameId
-			);
-			if (gameResult && !hasBeenAdded) {
-				await client.json.set(
-					"data",
-					".liveGames",
-					liveGames.filter((g) => g.gameId !== game.gameId)
-				);
-				//save the game and send it to the clients
-				await storeGameResult(gameResult);
-				await sendGame(gameResult);
-			}
-		} catch (e) {
-			console.log(e);
-		}
-	};
-	checkOnDelay(game);
+const getPlayerGames = async (name) => {
+	const cachedGames = await getCompletedGames();
+	const playerGames = await cachedGames.filter(
+		(g) => g.playerA == name || g.playerB == name
+	);
+	return playerGames.sort((a, b) => b.t - a.t);
 };
 
-const checkLiveGames = async () => {
+const updateLiveGames = async () => {
 	try {
-		let games = [];
-		const cursor = "/rps/history";
-		const res1 = await fetch(`${config.API_URI}${cursor}`);
-		const games1 = await res1.json();
-		const res2 = await fetch(`${config.API_URI}${games1.cursor}`);
-		const games2 = await res2.json();
-		games = games.concat(games1.data);
-		games = games.concat(games2.data);
+		const games = await getRecentHistory();
 		const liveGames = await getLiveGames();
-		const completedGames = await getCompletedGames();
-		for (const game of liveGames) {
-			const gameResult = games.find((g) => g.gameId === game.gameId);
-			const hasBeenAdded = await completedGames.find(
-				(g) => g.gameId === game.gameId
-			);
-			if (gameResult && !hasBeenAdded) {
-				await client.json.set(
-					"data",
-					".liveGames",
-					liveGames.filter((g) => g.gameId !== game.gameId)
-				);
-				//save the game and send it to the clients
-				await storeGameResult(gameResult);
-				await sendGame(gameResult);
+		for (let g of liveGames) {
+			// checkForCompletedDuplicates(g) ||
+			const duplicate = games.find((p) => p.gameId === g.gameId);
+			if (duplicate) {
+				await removeFromLiveGames(g);
+				await storeGameResult(duplicate);
+				//ususally sends unformatted games
+				await sendGame(formatGame(duplicate), "GAME_RESULT");
 			}
 		}
 	} catch (e) {
@@ -156,13 +149,17 @@ const checkLiveGames = async () => {
 	}
 };
 
-const delay = (t, val) => {
-	return new Promise(function (resolve) {
-		setTimeout(function () {
-			resolve(val);
-		}, t);
-	});
+const getRecentHistory = async () => {
+	const games1 = await history.getHistory(config.DEFAULT_CURSOR);
+	const games2 = await history.getHistory(games1.cursor);
+	return [...games1.data, ...games2.data];
 };
+
+//refactor some of this logic to the client
+//side so that the client requests
+//data from the redis database on change
+//then this data can be dynamically updated
+//in the front end!
 
 module.exports = {
 	client,
@@ -172,5 +169,5 @@ module.exports = {
 	getCompletedGames,
 	getLiveGames,
 	trimCache,
-	checkLiveGames,
+	getPlayerGames,
 };

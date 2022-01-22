@@ -1,5 +1,7 @@
 import axios from "axios";
-const baseUrl = "http://localhost:3001/api/players";
+import { API_BASE_URL } from "../config/config";
+
+const baseUrl = `${API_BASE_URL}/players`;
 
 const getPlayerStats = async (id) => {
 	const res = await axios.get(`${baseUrl}/${id}`);

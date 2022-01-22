@@ -1,18 +1,11 @@
 import React, { useEffect } from "react";
-import PlayerSelect from "./components/PlayerSelect";
+import PlayerSelect from "./components/Player/PlayerSelect";
 import LiveGameView from "./components/LiveGameView";
 import { Grid, Box, Heading, Container, Text } from "theme-ui";
-import { useStateValue, initGames } from "./state";
+import { useStateValue, initGames, addGameBegin, addGameResult } from "./state";
 import gamesRouter from "./services/games";
 import RecentGamesView from "./components/RecentGamesView";
-
-//plan for the frontend
-
-//link live games through cache
-//refactor code
-//done
-
-//make sure each component game has unique id!
+import { useWebSocket } from "./services/liveGames";
 
 const App = () => {
 	const [, dispatch] = useStateValue();
@@ -28,6 +21,19 @@ const App = () => {
 		};
 		initializeData();
 	}, [dispatch]);
+
+	//handle websocket updates
+	const handleWsUpdate = (event) => {
+		try {
+			const data = JSON.parse(event.data);
+			if (data.type === "GAME_BEGIN") dispatch(addGameBegin(data));
+			if (data.type === "GAME_RESULT") dispatch(addGameResult(data));
+		} catch (e) {
+			console.log(e);
+		}
+	};
+
+	useWebSocket("message", handleWsUpdate);
 
 	return (
 		<Container

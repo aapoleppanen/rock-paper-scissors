@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Container, Text, Image } from "theme-ui";
-import gif from "../theme/rps.gif";
-import PAPER from "../theme/wave.png";
-import ROCK from "../theme/rock.png";
-import SCISSORS from "../theme/scissors.png";
+import gif from "../../assets/images/rps.gif";
+import PAPER from "../../assets/images/wave.png";
+import ROCK from "../../assets/images/rock.png";
+import SCISSORS from "../../assets/images/scissors.png";
 
 const Game = ({ game, player }) => {
 	const [winnerName, loserName, winnerPlayed, loserPlayed] =

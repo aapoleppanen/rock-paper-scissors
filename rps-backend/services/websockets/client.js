@@ -1,11 +1,12 @@
 const WebSocket = require("ws");
-const config = require("../util/config");
-const cache = require("../cache/cache");
-const { findPlayer } = require("../util/dbUtil");
-const { sendGame } = require("./wsServer");
+const config = require("../../config/config");
+const cache = require("../../cache/cache");
+const { findPlayer, formatGame } = require("../../util/formatter");
+const { sendGame } = require("./server");
 
 const ws = new WebSocket(config.WS_URI);
 
+//handle live updates from the api
 ws.on("message", async (data) => {
 	try {
 		const event = JSON.parse(JSON.parse(data));
@@ -21,17 +22,14 @@ ws.on("message", async (data) => {
 
 const handleGameResult = async (event) => {
 	await cache.storeGameResult(event);
-	await sendGame(event);
+	await sendGame(formatGame(event), "GAME_RESULT");
 };
 
-//add some kind of timer to check if the
-//game is added to rps/history
-//since not everything is given
 const handleGameBegin = async (event) => {
 	await cache.storeGameBegin(event);
-	await sendGame(event);
-	//add possible new players to db w/o adding their
-	//games to avoid doubling games in db
+	await sendGame(formatGame(event), "GAME_BEGIN");
+	//check if players exist in the database
+	//if they do not, add the players
 	await findPlayer(event.playerA.name);
 	await findPlayer(event.playerB.name);
 };

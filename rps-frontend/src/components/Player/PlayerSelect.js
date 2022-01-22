@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import playerService from "../services/players";
+import playerService from "../../services/players";
 import Select from "react-select";
 import PlayerHistory from "./PlayerHistory";
 import { Container } from "theme-ui";
