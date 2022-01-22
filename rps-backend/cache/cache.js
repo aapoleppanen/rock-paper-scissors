@@ -18,6 +18,7 @@ const clearCache = async (game) => {
 	try {
 		await client.json.set("data", "$", {
 			games: [],
+			liveGames: [],
 		});
 	} catch (e) {
 		console.log(e);
@@ -38,15 +39,29 @@ const trimCache = async () => {
 	}
 };
 
-const storeInCache = async (game) => {
+const storeGameResult = async (game) => {
 	try {
 		await client.json.arrAppend("data", ".games", formatGame(game));
+		const liveGames = await getLiveGames();
+		await client.json.set(
+			"data",
+			".liveGames",
+			liveGames.filter((g) => g.gameId !== game.gameId)
+		);
 	} catch (e) {
 		console.log(e);
 	}
 };
 
-const readCache = async () => {
+const storeGameBegin = async (game) => {
+	try {
+		await client.json.arrAppend("data", ".liveGames", formatGame(game));
+	} catch (e) {
+		console.log(e);
+	}
+};
+
+const getCompletedGames = async () => {
 	try {
 		const result = await client.json.get("data", {
 			path: [".games"],
@@ -57,10 +72,23 @@ const readCache = async () => {
 	}
 };
 
+const getLiveGames = async () => {
+	try {
+		const result = await client.json.get("data", {
+			path: [".liveGames"],
+		});
+		return result;
+	} catch (e) {
+		console.log(e);
+	}
+};
+
 module.exports = {
 	client,
 	clearCache,
-	storeInCache,
-	readCache,
+	storeGameResult,
+	storeGameBegin,
+	getCompletedGames,
+	getLiveGames,
 	trimCache,
 };

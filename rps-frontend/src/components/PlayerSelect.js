@@ -47,7 +47,6 @@ const PlayerHistoryView = () => {
 					placeholder={"Search for players..."}
 					styles={{
 						borderRadius: "12px",
-
 						control: (base) => ({
 							...base,
 							fontFamily: "Roboto, Sans-serif",

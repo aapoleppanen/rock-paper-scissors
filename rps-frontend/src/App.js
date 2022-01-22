@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import PlayerHistoryView from "./components/PlayerHistoryView";
+import PlayerSelect from "./components/PlayerSelect";
 import LiveGameView from "./components/LiveGameView";
 import { Grid, Box, Heading, Container, Text } from "theme-ui";
 import { useStateValue, initGames } from "./state";
@@ -9,10 +9,10 @@ import RecentGamesView from "./components/RecentGamesView";
 //plan for the frontend
 
 //link live games through cache
-//implement deisgn , with a max of maybe 10 recent games
-//find some icons
 //refactor code
 //done
+
+//make sure each component game has unique id!
 
 const App = () => {
 	const [, dispatch] = useStateValue();
@@ -21,7 +21,7 @@ const App = () => {
 		const initializeData = async () => {
 			try {
 				const data = await gamesRouter.getGames();
-				if (data.length) dispatch(initGames(data));
+				if (data) dispatch(initGames(data));
 			} catch (e) {
 				console.log(e);
 			}
@@ -40,8 +40,13 @@ const App = () => {
 				flexDirection: "column",
 			}}
 		>
-			<Heading as="h1" color="primary" style={{ textAlign: "center" }} p={3}>
-				RPS-tulokset
+			<Heading
+				as="h1"
+				color="primary"
+				style={{ textAlign: "center", fontWeight: "300" }}
+				p={3}
+			>
+				RPS-RESULTS
 			</Heading>
 			<Grid
 				gap={0}
@@ -75,7 +80,7 @@ const App = () => {
 					<RecentGamesView></RecentGamesView>
 				</Box>
 				<Box variant={"primaryBox"} my={[2, null, null]}>
-					<PlayerHistoryView></PlayerHistoryView>
+					<PlayerSelect></PlayerSelect>
 				</Box>
 			</Grid>
 		</Container>

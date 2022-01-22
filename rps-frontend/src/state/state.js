@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer } from "react";
 
 const initialState = {
 	liveGames: [],
-	finishedGames: [],
+	completedGames: [],
 };
 
 export const StateContext = createContext([initialState, () => initialState]);

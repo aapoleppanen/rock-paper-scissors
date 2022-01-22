@@ -1,5 +1,3 @@
-import { determineWinner } from "../services/games";
-
 export const addGameBegin = (payload) => {
 	return {
 		type: "ADD_GAME_BEGIN",
@@ -36,28 +34,18 @@ export const reducer = (state, action) => {
 				liveGames: [
 					...state.liveGames,
 					{
-						gameId: action.payload.gameId,
-						playerA: action.payload.playerA.name,
-						playerB: action.payload.playerB.name,
-						t: action.payload.t,
+						...formatGame(action.payload),
 					},
 				],
 			};
 		case "ADD_GAME_RESULT":
-			const winner = determineWinner(action.payload);
 			return {
 				...state,
-				finishedGames: [
+				completedGames: [
 					{
-						gameId: action.payload.gameId,
-						playerA: action.payload.playerA.name,
-						playerB: action.payload.playerB.name,
-						aPlayed: action.payload.playerA.played,
-						bplayed: action.payload.playerB.played,
-						t: action.payload.t,
-						winner,
+						...formatGame(action.payload),
 					},
-					...state.finishedGames,
+					...state.completedGames,
 				],
 				liveGames: state.liveGames.filter(
 					(g) => g.gameId !== action.payload.gameId
@@ -66,9 +54,62 @@ export const reducer = (state, action) => {
 		case "INIT_GAMES":
 			return {
 				...state,
-				finishedGames: [...state.finishedGames, ...action.payload],
+				completedGames: [
+					...state.completedGames,
+					...action.payload.completedGames,
+				],
+				liveGames: [...state.liveGames, ...action.payload.liveGames],
 			};
 		default:
 			return state;
+	}
+};
+
+//add this to the reducers
+const formatGame = (g) => {
+	const fg = {
+		gameId: g.gameId,
+		playerA: g.playerA.name,
+		playerB: g.playerB.name,
+		t: g.t,
+	};
+	if (g.type && g.type === "GAME_BEGIN") {
+		return fg;
+	} else {
+		return {
+			...fg,
+			aPlayed: g.playerA.played,
+			bPlayed: g.playerB.played,
+			winner: determineWinner({
+				...fg,
+				aPlayed: g.playerA.played,
+				bPlayed: g.playerB.played,
+			}),
+		};
+	}
+};
+
+const determineWinner = (game) => {
+	const [aPlayed, bPlayed] = [game.playerA.played, game.playerB.played];
+	if (aPlayed === bPlayed) {
+		return "tie";
+	} else if (aPlayed === "ROCK") {
+		if (bPlayed === "PAPER") {
+			return "playerB";
+		} else {
+			return "playerA";
+		}
+	} else if (aPlayed === "PAPER") {
+		if (bPlayed === "SCISSORS") {
+			return "playerB";
+		} else {
+			return "playerA";
+		}
+	} else {
+		if (bPlayed === "ROCK") {
+			return "playerB";
+		} else {
+			return "playerA";
+		}
 	}
 };

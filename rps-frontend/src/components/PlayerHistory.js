@@ -1,24 +1,55 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import playerService from "../services/players";
 import { Text, Container, Button } from "theme-ui";
 import GameList from "./GameList";
+import { useStateValue } from "../state";
 
 const PlayerHistory = ({ id }) => {
 	const [player, setPlayer] = useState();
 	const [page, setPage] = useState(0);
+	const [lastUpdate, setLastUpdate] = useState();
+	const [{ completedGames }] = useStateValue();
+
+	const getPlayer = useCallback(
+		async (isNew) => {
+			const data = await playerService.getPlayerStats(id);
+			if (data) {
+				const newPlayer = isNew
+					? { ...data, games: [data.games] }
+					: { ...data, games: [data.games, ...player.games] };
+				setPlayer(newPlayer);
+			}
+		},
+		[id, player]
+	);
 
 	useEffect(() => {
-		const getPlayer = async () => {
-			const data = await playerService.getPlayerStats(id);
-			const newPlayer = { ...data, games: [data.games] };
-			if (data) setPlayer(newPlayer);
-		};
 		try {
-			if (id.length) getPlayer();
+			if (id.length) {
+				getPlayer(true);
+			}
 		} catch (e) {
 			console.log(e);
 		}
 	}, [id]);
+
+	useEffect(() => {
+		try {
+			if (player) {
+				const newestGame = completedGames.slice(0, 1)[0];
+				if (
+					(newestGame.playerA === player.name ||
+						newestGame.playerB === player.name) &&
+					lastUpdate !== newestGame.gameId
+				) {
+					getPlayer(false);
+					setLastUpdate(newestGame.gameId);
+				}
+			}
+		} catch (e) {
+			console.log(e);
+		}
+	}, [completedGames, getPlayer, lastUpdate, player]);
 
 	const getMore = async () => {
 		try {
@@ -64,7 +95,12 @@ const PlayerHistory = ({ id }) => {
 							</Text>
 						</Container>
 					</Container>
-					<Container>
+					<Container
+						sx={{
+							borderBottom: "primary",
+							borderRadius: "0 0 12px 12px",
+						}}
+					>
 						<Container
 							py={3}
 							variant={"centered"}
@@ -72,7 +108,14 @@ const PlayerHistory = ({ id }) => {
 						>
 							<Text> Recently Played</Text>
 						</Container>
-						<Container sx={{ overflow: "scroll", height: "450px" }}>
+						<Container
+							sx={{
+								overflow: "scroll",
+								height: "446px",
+								borderRadius: "0 0 12px 12px",
+								zIndex: -3,
+							}}
+						>
 							{player.games.map((g, i) => (
 								<GameList
 									games={g}

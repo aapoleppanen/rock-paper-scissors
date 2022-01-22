@@ -2,7 +2,6 @@ import React from "react";
 import { Container } from "theme-ui";
 import Game from "./Game";
 
-//const page size
 const GameList = ({ games, hasPlayer }) => {
 	return (
 		<Container>

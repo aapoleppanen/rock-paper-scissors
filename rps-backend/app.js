@@ -28,7 +28,7 @@ mongoose
 	});
 
 cache.client.connect();
-// cache.clearCache();
+cache.clearCache();
 
 ws.client.on("open", function open() {
 	console.log("Connected to WS");

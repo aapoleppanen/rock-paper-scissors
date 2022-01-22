@@ -20,7 +20,7 @@ playersRouter.get("/", async (req, res, next) => {
 playersRouter.get("/:id", async (req, res, next) => {
 	try {
 		const player = await Player.findById(req.params.id);
-		const cachedGames = await cache.readCache();
+		const cachedGames = await cache.getCompletedGames();
 		const playerGames = await cachedGames.filter(
 			(g) => g.playerA == player.name || g.playerB == player.name
 		);
@@ -35,10 +35,15 @@ playersRouter.get("/:id", async (req, res, next) => {
 			}
 		);
 
-		const playerObject = formatPlayer(player.toObject(), playerGames);
+		const playerObject = formatPlayer(
+			player.toObject(),
+			playerGames.sort((a, b) => b.t - a.t)
+		);
 		res.json({
 			...playerObject,
-			games: [...games, ...playerGames],
+			games: [...playerGames, ...games].filter(
+				(v, i, a) => a.findIndex((t) => t.gameId === v.gameId) === i
+			),
 		});
 	} catch (e) {
 		next(e);

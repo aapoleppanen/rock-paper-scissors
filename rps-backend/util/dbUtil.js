@@ -29,14 +29,22 @@ const formatGame = (g) => {
 		gameId: g.gameId,
 		playerA: g.playerA.name,
 		playerB: g.playerB.name,
-		aPlayed: g.playerA.played,
-		bPlayed: g.playerB.played,
 		t: g.t,
 	};
-	return {
-		...fg,
-		winner: determineWinner(fg),
-	};
+	if (g.type && g.type === "GAME_BEGIN") {
+		return fg;
+	} else {
+		return {
+			...fg,
+			aPlayed: g.playerA.played,
+			bPlayed: g.playerB.played,
+			winner: determineWinner({
+				...fg,
+				aPlayed: g.playerA.played,
+				bPlayed: g.playerB.played,
+			}),
+		};
+	}
 };
 
 const formatPlayer = (player, pGames) => {

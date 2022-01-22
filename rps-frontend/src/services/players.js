@@ -12,7 +12,6 @@ const getPlayers = async () => {
 };
 
 const getPlayersGames = async (name, page) => {
-	console.log(`${baseUrl}/games/${name}/${page}`);
 	const res = await axios.get(`${baseUrl}/games/${name}/${page}`);
 	return res.data;
 };

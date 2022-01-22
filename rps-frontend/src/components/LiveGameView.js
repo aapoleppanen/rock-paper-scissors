@@ -5,8 +5,7 @@ import GameList from "./GameList";
 
 const LiveGameView = () => {
 	const [{ liveGames }, dispatch] = useStateValue();
-	//put this into another file
-	//switch statement for dealing with the event type
+
 	const handleWsUpdate = (event) => {
 		try {
 			const data = JSON.parse(JSON.parse(event.data));
@@ -23,13 +22,6 @@ const LiveGameView = () => {
 	return (
 		<div>
 			<GameList games={liveGames}></GameList>
-			{/* <Grid gap={2} columns={[1]}>
-				{finishedGames.map((g) => (
-					<Box p={3} fontSize={4} bg="secondary" key={g.gameId}>
-						{g.gameId}
-					</Box>
-				))}
-			</Grid> */}
 		</div>
 	);
 };

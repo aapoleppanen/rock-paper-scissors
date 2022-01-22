@@ -11,9 +11,9 @@ const theme = {
 		lightgray: "#f6f6ff",
 		primary: "grey",
 		secondary: "white",
-		lose: "EF6F6C",
-		win: "7FB685",
-		tie: "DDAE7E",
+		lose: "#EF6F6C",
+		win: "#7FB685",
+		tie: "#DDAE7E",
 	},
 	space: [0, 4, 8, 16, 32, 64, 128, 256],
 	fonts: {
