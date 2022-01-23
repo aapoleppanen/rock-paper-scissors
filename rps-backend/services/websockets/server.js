@@ -12,13 +12,14 @@ server.on("error", (e) => {
 });
 
 const sendGame = async (event, type) => {
+	const server = {};
 	try {
 		server.clients.forEach((c) => {
 			if (c.readyState === WebSocket.OPEN) {
 				c.send(JSON.stringify({ ...event, type }));
 			}
 		});
-	} catch {}
+	} catch (e) {}
 };
 
 module.exports = {

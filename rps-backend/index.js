@@ -1,12 +1,12 @@
-const https = require("https");
+const http = require("http");
 const app = require("./app");
 const config = require("./config/config");
 const ws = require("./services/websockets/server");
 
-const server = https.createServer(app);
+const server = http.createServer(app);
 
-server.on("upgrade", () => {
-	ws.handleUpgrade(request, socket, head, function (w) {
+server.on("upgrade", function upgrade(request, socket, head) {
+	ws.handleUpgrade(request, socket, head, function done(w) {
 		ws.emit("connection", w, request);
 	});
 });
