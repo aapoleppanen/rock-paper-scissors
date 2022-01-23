@@ -12,7 +12,6 @@ server.on("error", (e) => {
 });
 
 const sendGame = async (event, type) => {
-	const server = {};
 	try {
 		server.clients.forEach((c) => {
 			if (c.readyState === WebSocket.OPEN) {

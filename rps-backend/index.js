@@ -6,8 +6,8 @@ const ws = require("./services/websockets/server");
 const server = http.createServer(app);
 
 server.on("upgrade", function upgrade(request, socket, head) {
-	ws.handleUpgrade(request, socket, head, function done(w) {
-		ws.emit("connection", w, request);
+	ws.server.handleUpgrade(request, socket, head, function done(w) {
+		ws.server.emit("connection", w, request);
 	});
 });
 
