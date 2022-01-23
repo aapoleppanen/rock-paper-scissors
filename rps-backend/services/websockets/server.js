@@ -1,7 +1,8 @@
 const { WebSocketServer } = require("ws");
 const WebSocket = require("ws");
+const httpServer = require("../../index");
 
-const server = new WebSocketServer({ port: 8080, path: "/live" });
+const server = new WebSocketServer({ server: httpServer, path: "live" });
 
 server.on("connection", () => {
 	console.log("Client connected");
