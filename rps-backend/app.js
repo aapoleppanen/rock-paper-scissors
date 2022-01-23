@@ -34,6 +34,7 @@ ws.client.on("open", function open() {
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static("build"));
 
 app.use("/api/players", playersRouter);
 app.use("/api/games", gamesRouter);
