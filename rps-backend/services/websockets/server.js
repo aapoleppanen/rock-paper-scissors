@@ -1,8 +1,7 @@
 const { WebSocketServer } = require("ws");
 const WebSocket = require("ws");
-const httpServer = require("../../index");
 
-const server = new WebSocketServer({ server: httpServer, path: "live" });
+const server = new WebSocketServer({ noServer: true });
 
 server.on("connection", () => {
 	console.log("Client connected");
@@ -13,11 +12,13 @@ server.on("error", (e) => {
 });
 
 const sendGame = async (event, type) => {
-	server.clients.forEach((c) => {
-		if (c.readyState === WebSocket.OPEN) {
-			c.send(JSON.stringify({ ...event, type }));
-		}
-	});
+	try {
+		server.clients.forEach((c) => {
+			if (c.readyState === WebSocket.OPEN) {
+				c.send(JSON.stringify({ ...event, type }));
+			}
+		});
+	} catch {}
 };
 
 module.exports = {
