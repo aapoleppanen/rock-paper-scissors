@@ -27,12 +27,12 @@ export const useWebSocket = (eventName, handler) => {
 	const { ws } = useContext(WsContext);
 
 	useEffect(() => {
-		console.log("adding listener");
+		// console.log("adding listener");
 		ws.addEventListener(eventName, handler);
 	}, [ws]);
 
 	return () => {
-		console.log("removing listener");
+		// console.log("removing listener");
 		ws.removeEventListener(eventName, handler);
 	};
 };
