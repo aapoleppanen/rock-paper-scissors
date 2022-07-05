@@ -29,10 +29,10 @@ export const useWebSocket = (eventName, handler) => {
 	useEffect(() => {
 		// console.log("adding listener");
 		ws.addEventListener(eventName, handler);
-	}, [ws]);
-
+		
 	return () => {
 		// console.log("removing listener");
 		ws.removeEventListener(eventName, handler);
 	};
+	}, [ws]);
 };
